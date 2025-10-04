@@ -31,7 +31,11 @@ for text in soup_word.find_all("div", class_="di-title"):
 
 meaning = []
 example = []
-elements = soup_word.find("div", class_="entry-body").find_all("div", class_="def-block ddef_block")
+
+if soup_word.find("div", class_= "pr idiom-block"):
+    elements = soup_word.find("div", class_="idiom-block").find_all("div", class_="def-block ddef_block")
+else:
+    elements = soup_word.find("div", class_="entry-body").find_all("div", class_="def-block ddef_block")
 
 for element in elements:
 
