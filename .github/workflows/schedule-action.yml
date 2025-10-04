@@ -1,0 +1,31 @@
+name: "Run schedule job"
+on:
+  schedule:
+  - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+      - name: Install all required libraries
+        run: pip install -r requirements.txt
+      - name: Run the script
+        run: python main.py
+      - name: Commit database changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add *.db
+          git commit -m "Update database - $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
+          git push
+      
+  
