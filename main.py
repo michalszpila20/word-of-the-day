@@ -31,7 +31,7 @@ for text in soup_word.find_all("div", class_="di-title"):
 
 meaning = []
 example = []
-elements = soup_word.find("div", class_="pos-body").find_all("div", class_="def-block ddef_block")
+elements = soup_word.find("div", class_="entry-body").find_all("div", class_="def-block ddef_block")
 
 for element in elements:
 
@@ -52,4 +52,5 @@ print(f"example: {example}")
 
 db = Database()
 db.insert(word, str(meaning), str(example))
-# db.delete("renewal")
+# # db.delete("renewal")
+
