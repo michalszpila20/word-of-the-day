@@ -1,4 +1,6 @@
 import requests
+import os
+from supabase import create_client, Client
 from bs4 import BeautifulSoup
 from database import Database
 
@@ -7,6 +9,10 @@ basic_url = "https://dictionary.cambridge.org"
 headers = {'User-Agent': 'Mozilla/5.0'}
 
 homepage_response = requests.get(url, headers=headers)
+
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_key = os.getenv('SUPABASE_KEY')
+supabase: Client = create_client(supabase_url, supabase_key)
 
 soup_homepage = BeautifulSoup(homepage_response.content, 'html.parser')
 
@@ -26,7 +32,6 @@ pretty_word = soup_word.prettify()
 
 for text in soup_word.find_all("div", class_="di-title"):
     word = text.getText()
-    print(f"word: {word}")
     break
 
 meaning = []
@@ -42,19 +47,32 @@ for element in elements:
     for text in element.find_all("div", class_="def ddef_d db"):
         meaning.append(text.getText().replace(': ', ''))
 
-    tags = element.find_all("span", class_="eg deg")
+    tags = element.find_all("div", class_="examp dexamp")
 
     mini_example = []
+    connotation = ""
 
     for tag in tags:
-        mini_example.append(tag.getText())
+
+        if tag.find("span", class_="lu dlu"):
+            connotation = tag.find("span", class_="lu dlu").get_text()
+        elif tag.find("a", class_="lu dlu"):
+            connotation = tag.find("a", class_="lu dlu").get_text()
+
+        if connotation:
+            mini_example.append("(" + str(connotation) + ") - " + tag.find("span", class_="eg deg").get_text())
+        else:
+            mini_example.append(tag.find("span", class_="eg deg").get_text())
 
     example.append(mini_example)
-    
-print(f"meaning: {meaning}")     
-print(f"example: {example}")
 
-db = Database()
-db.insert(word, str(meaning), str(example))
-# # db.delete("renewal")
-
+response = (
+    supabase.table("words")
+    .insert(
+        {
+         "word": word,
+         "meaning": str(meaning),
+         "example": str(example)
+         })
+    .execute()
+)
